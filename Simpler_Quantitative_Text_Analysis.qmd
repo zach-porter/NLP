@@ -1,0 +1,1548 @@
+---
+title: "Final_paper"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(readtext)
+library(quanteda)
+library(dplyr)
+library(ggplot2)
+library(quanteda.textmodels)
+library(quanteda.textstats)
+```
+
+Add in the text from the U.N. General Debates.
+
+```{r}
+
+# Read in the text
+dat_un <- readtext("TXT/*",
+                   docvarsfrom = "filenames",
+                   docvarnames = c("country", "session", "year"),
+                   dvsep = "_")
+
+```
+
+#turn the data into a corpus
+
+```{r}
+
+# Create a corpus
+corp_un <- corpus(dat_un, text_field = "text")
+
+```
+
+```{r}
+ndoc(corp_un)
+```
+
+```{r}
+#create a table or graph, featuring the number of documents from each country in the corpus as well as the number of documents from each year in the corpus.
+
+# Create a table of the number of documents from each country in the corpus
+table(dat_un$country)
+
+# Create a table of the number of documents from each year in the corpus
+table(dat_un$year)
+
+```
+
+```{r}
+#turn the table of speeches per year into a graph, scaling the data so that the x ticks only represent the years in decades, and adding a title to the graph.
+speeches_per_year <- table(dat_un$year)
+
+speeches_per_year <- as.data.frame(speeches_per_year)
+
+ggplot(speeches_per_year, aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  scale_x_discrete(breaks = seq(1940, 2020, 10)) +
+  labs(title = "Number of speeches per year in the U.N. General Debates",
+       x = "Year",
+       y = "Number of speeches")
+
+```
+
+```{r}
+#save the plot
+ggsave("speeches_per_year.png", width = 10, height = 10)
+```
+
+```{r}
+```
+
+```{r}
+#find the average number of speeches per country
+mean(speeches_per_country$Freq)
+```
+
+```{r}
+```
+
+```{r}
+#create multiple plots with only 20 countries per plot, that will display the number of speeches per country in the U.N. General Debates, with no labels for the Var1 or the Freq 
+plot1 <- ggplot(speeches_per_country[1:20,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot2 <- ggplot(speeches_per_country[21:40,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity")+
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot3 <- ggplot(speeches_per_country[41:60,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot4 <- ggplot(speeches_per_country[61:80,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot5 <- ggplot(speeches_per_country[81:100,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot6 <- ggplot(speeches_per_country[101:120,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot7 <- ggplot(speeches_per_country[121:140,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot8 <- ggplot(speeches_per_country[141:160,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+plot9 <- ggplot(speeches_per_country[161:180,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity")+
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+ 
+
+```
+
+```{r}
+plot10 <- ggplot(speeches_per_country[181:200,], aes(x = Var1, y = Freq)) +
+  geom_bar(stat = "identity") +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank())
+```
+
+```{r}
+
+library(gridExtra)
+#combine the plots into a single plot, creating a 2x5 grid of plots, with the title being the number of speeches per country in the U.N. General Debates, changing the figure size so that the plots are more readable, and adding a label to the x-axis of the plots that says "Country" and a label to the y-axis of the plots that says "Number of Speeches"
+all_speaches <- grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6, plot7, plot8, plot9, plot10, ncol = 2, top = "Number of speeches per country in the U.N. General Debates", left = "Country", bottom = "Number of Speeches")
+
+```
+
+```{r}
+#save this newly arranged plot, all_speeches from grid.arrange, so that it can be used in the research paper, making sure the plot's image looks like the one in the viewer
+ggsave("all_speeches.png", all_speaches, width = 13)
+```
+
+Using a key word in context approach, find all the documents that contain mention of Israel or Palestine, using words like "Israel\*", "Palest", "Jerusalem", "Gaza", "West Bank"
+
+```{r}
+
+# Tokenize the corupus
+toks_un <- tokens(corp_un)
+
+```
+
+```{r}
+
+# Find all documents that mention either Israel, Palestine, Jerusalem, West Bank, Gaza by creating a loop that searches for each of these words in the corpus and store them each as a new kwic object
+
+keywords <- c("Israel", "Palestine", "Jerusalem", "Gaza")
+
+for (i in 1:length(keywords)) {
+  kwic_un <- kwic(toks_un, 
+                  pattern = keywords[i],
+                  window = 500)
+  
+  assign(paste0("kwic_", keywords[i]), kwic_un)
+}
+
+kwic_un_west_bank <- kwic(toks_un, 
+                pattern = phrase("West Bank"),
+                window = 500)
+
+nrow(kwic_un_west_bank)
+
+```
+
+Now join them all together in a single data frame via the package dplyr, setting the text back to to pre, keyword, and post
+
+```{r}
+library(dplyr)
+
+dat_kwic_Is <- kwic_Israel %>%
+  as.data.frame() %>%
+  mutate(sentence = paste(pre, keyword, post, sep = " "))
+
+dat_kwic_Jer <- kwic_Jerusalem %>%
+  as.data.frame() %>%
+  mutate(sentence = paste(pre, keyword, post, sep = " "))
+
+dat_kwic_P <- kwic_Palestine %>%
+  as.data.frame() %>%
+  mutate(sentence = paste(pre, keyword, post, sep = " "))
+
+dat_kwic_G <- kwic_Gaza %>%
+  as.data.frame() %>%
+  mutate(sentence = paste(pre, keyword, post, sep = " "))
+
+dat_kwic_WB <- kwic_un_west_bank %>%
+  as.data.frame() %>%
+  mutate(sentence = paste(pre, keyword, post, sep = " "))
+
+#join all the data frames together
+dat_kwic_all <- bind_rows(dat_kwic_Is, dat_kwic_Jer, dat_kwic_P, dat_kwic_G, dat_kwic_WB)
+
+```
+
+Create 3 new columns in the data frame that indicates "country", "session", "year", which document the text is from. This information can be gained docname column in the kwic object, where each row has a variable is listed as country_session_year.txt.
+
+```{r}
+
+dat_kwic_all$country <- sapply(strsplit(dat_kwic_all$docname, "_"), "[", 1)
+
+dat_kwic_all$session <- sapply(strsplit(dat_kwic_all$docname, "_"), "[", 2)
+
+dat_kwic_all$year <- sapply(strsplit(dat_kwic_all$docname, "_"), "[", 3)
+
+#remove the .txt from the year column
+dat_kwic_all$year <- gsub(".txt", "", dat_kwic_all$year)
+
+#change the keywords to lower case
+dat_kwic_all$keyword <- tolower(dat_kwic_all$keyword)
+
+```
+
+```{r}
+#write the data frame to a csv file to make it easier to work with in the future
+write.csv(dat_kwic_all, "dat_kwic_all.csv")
+```
+
+```{r}
+#load the data frame back in, and we can start here, when we are repeating the analysis
+dat_kwic_all <- read.csv("dat_kwic_all.csv")
+```
+
+```{r}
+
+```
+
+Now we can create plots to see firstly, which countries talked the most about Israel, Palestine, Gaza, West Bank, and Jerusalem in our data frame dat_kwic_all. Secondly, we can also create visualizations to see how the mentions of these words have changed over time.
+
+```{r}
+#firstly, we need to group the data by country and keyword
+dat_kwic_all_grouped <- dat_kwic_all %>%
+  group_by(country, keyword) %>%
+  summarise(n = n())
+
+View(dat_kwic_all_grouped)
+
+#secondly, we need to group the data by year and keyword
+dat_kwic_all_grouped_year <- dat_kwic_all %>%
+  group_by(year, keyword) %>%
+  summarise(n = n())
+View(dat_kwic_all_grouped_year)
+
+#third, group the data by country
+dat_kwic_all_grouped_country <- dat_kwic_all %>%
+  group_by(country) %>%
+  summarise(n = n())
+View(dat_kwic_all_grouped_country)
+
+```
+
+```{r}
+# Now we can perform some analysis of the data to see which countries were talking the most about the keywords, as well as how the mentions of these keywords have changed over time.
+library(ggplot2)
+# Which countries talked the most about each keyword? As there are so many different countries, we will only plot the 10 top countries that talked the most about each keyword. We can make sure to also have it go from the most talked about to the least in the graph, and have each keyword represented by a different graph using facet_wrap.
+top_10 <- dat_kwic_all_grouped %>%
+  group_by(keyword) %>%
+  top_n(10, n) %>%
+  ggplot(aes(x = reorder(country, n), y = n, fill = keyword)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~keyword, scales = "free") +
+  coord_flip() +
+  labs(title = "Top 10 countries that talked the most about each keyword",
+       x = "Country",
+       y = "Number of mentions")
+top_10
+```
+
+```{r}
+#save the plot
+ggsave("top_countries.png", width = 10, height = 10)
+
+```
+
+```{r}
+#save the plot
+ggsave("top_countries.png", width = 10, height = 10)
+```
+
+```{r}
+#create a plot with the number of speeches per year
+speeches_per_year <- table(dat_un$year)
+
+```
+
+```{r}
+#Instead of the data grouped by year, we can take the dat_kwick_all data frame and group it by year and keyword, and then plot the number of mentions of each keyword over time, with each keyword represented by a different graph using facet_wrap. As there are many years, we can have the x-axis represent the year, but only display each decade on x ticks, to make the graph more readable. We can also add a line of best fit to each graph to see the trend of the mentions of each keyword over time.
+
+#library(ggrepel)
+
+mentions_overtime <- dat_kwic_all_grouped_year %>%
+  ggplot(aes(x = as.numeric(year), y = n, color = keyword)) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  facet_wrap(~keyword, scales = "free") +
+  scale_x_continuous(breaks = seq(1940, 2020, 10)) +
+  labs(title = "Number of mentions of each keyword over time",
+       x = "Year",
+       y = "Number of mentions")
+  #theme_minimal()
+mentions_overtime
+```
+
+```{r}
+#save the plot
+ggsave("mentions_over_time.png", mentions_overtime, width = 10, height = 10)
+```
+
+```{r}
+# Now we have to add a column to the data for the full country name, as the world map data uses the full country name(which we will use after cleaning up the data). We can use the countrycode package to convert the country code that is currently in iso3c: ISO-3 character to the full country name. We can then merge the data with the world map data to plot the data on the world map.
+
+library(countrycode)
+
+# Convert the country code to the full country name
+
+dat_kwic_all$country_full <- countrycode(dat_kwic_all$country, "iso3c", "country.name")
+
+# YUG is not a valid country code, so we will change it to SRB, which is the current country code for Serbia
+dat_kwic_all$country_full[dat_kwic_all$country == "YUG"] <- "Serbia"
+#CSK is not a valid country code, so we will change it to CZE, which is the current country code for Czech Republic
+dat_kwic_all$country_full[dat_kwic_all$country == "CSK"] <- "Czech Republic"
+#DDR is not a valid country code, so we will change it to DEU, which is the current country code for Germany
+dat_kwic_all$country_full[dat_kwic_all$country == "DDR"] <- "Germany"
+#ZAR is not a valid country code, so we will change it to ZAF, which is the current country code for South Africa
+dat_kwic_all$country_full[dat_kwic_all$country == "ZAR"] <- "South Africa"
+#YMD is not a valid country code, so we will change it to YEM, which is the current country code for Yemen
+dat_kwic_all$country_full[dat_kwic_all$country == "YMD"] <- "Yemen"
+#CZK is not a valid country code, so we will change it to CZE, which is the current country code for Czech Republic
+dat_kwic_all$country_full[dat_kwic_all$country == "CZK"] <- "Czech Republic"
+#EU is not a valid country code, so we will change it to ECU, which is the current country code for Ecuador
+dat_kwic_all$country_full[dat_kwic_all$country == "EU"] <- "Ecuador"
+```
+
+```{r}
+#check to see if any country_full is NA
+table(is.na(dat_kwic_all$country_full))
+
+# find all the countries that are NA in country_full
+dat_kwic_all$country[is.na(dat_kwic_all$country_full)]
+
+
+
+
+```
+
+```{r}
+# Merge the data with the world map data
+
+#dat_kwic_all_map <- merge(dat_kwic_all, world_map, by.x = "country_full", by.y = "region", all.x = TRUE)
+```
+
+```{r}
+#try the same thing with the other data frame dat_kwic_all_grouped
+
+dat_kwic_all_grouped$country_full <- countrycode(dat_kwic_all_grouped$country, "iso3c", "country.name")
+
+# YUG is not a valid country code, so we will change it to SRB, which is the current country code for Serbia
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "YUG"] <- "Serbia"
+#CSK is not a valid country code, so we will change it to CZE, which is the current country code for Czech Republic
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "CSK"] <- "Czech Republic"
+#DDR is not a valid country code, so we will change it to DEU, which is the current country code for Germany
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "DDR"] <- "Germany"
+#ZAR is not a valid country code, so we will change it to ZAF, which is the current country code for South Africa
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "ZAR"] <- "South Africa"
+#YMD is not a valid country code, so we will change it to YEM, which is the current country code for Yemen
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "YMD"] <- "Yemen"
+#CZK is not a valid country code, so we will change it to CZE, which is the current country code for Czech Republic
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "CZK"] <- "Czech Republic"
+#EU is not a valid country code, so we will change it to ECU, which is the current country code for Ecuador
+dat_kwic_all_grouped$country_full[dat_kwic_all_grouped$country == "EU"] <- "Ecuador"
+```
+
+```{r}
+# Merge the data with the world map data
+
+#dat_kwic_all_grouped_map <- merge(dat_kwic_all_grouped, world_map, by.x = "country_full", by.y = "region", all.x = TRUE)
+```
+
+```{r}
+#check to see if any country_full is NA
+table(is.na(dat_kwic_all_grouped$country_full))
+
+# find all the countries that are NA in country_full
+dat_kwic_all_grouped$country[is.na(dat_kwic_all_grouped$country_full)]
+
+```
+
+```{r}
+#Now make sure you get the average amount of keywords used by each country, buy making sure the data is grouped by country and keyword, and then summarizing the data by the average amount of keywords used by each country. We can use this for our map
+
+dat_kwic_all_grouped_avg <- dat_kwic_all_grouped %>%
+  group_by(country) %>%
+  summarise(avg = mean(n))
+View(dat_kwic_all_grouped_avg)
+```
+
+```{r}
+library(sf)
+library(dplyr)
+library(tmap)
+library(rnaturalearth)
+
+
+# Load the world map
+data("World")
+
+# make sure that the country column in the data frame is in uppercase
+dat_kwic_all_grouped_avg$country <- toupper(dat_kwic_all_grouped_avg$country) 
+
+# merge the two dataframes based upon country and iso_a3
+merged_df <- left_join(dat_kwic_all_grouped_avg, World, by = c("country" = "iso_a3"))
+
+#do this with the total mentions of each keyword by country
+merged_df2<- left_join(dat_kwic_all_grouped_country, World, by = c("country" = "iso_a3"))
+```
+
+```{r}
+class(merged_df)
+names(merged_df)
+```
+
+```{r}
+#change the class of the merged_df to a sf object
+
+merged_df <- st_as_sf(merged_df)
+
+merged_df2 <- st_as_sf(merged_df2)
+```
+
+```{r}
+#check our merged data's geometry column
+merged_df <- merged_df %>% filter(!st_is_empty(geometry))
+
+# Check for invalid geometries and make them valid
+merged_df <- st_make_valid(merged_df)
+
+# Set tmap options to check and fix invalid geometries
+tmap_options(check.and.fix = TRUE)
+
+# do the same steps with the merged_df2
+merged_df2 <- merged_df2 %>% filter(!st_is_empty(geometry))
+merged_df2 <- st_make_valid(merged_df2)
+tmap_options(check.and.fix = TRUE)
+
+
+```
+
+```{r}
+# Set the tmap mode to plot
+tmap_mode("plot")
+
+# Create the map with the merged data frame
+map <- tm_shape(merged_df) +
+  tm_polygons("avg", 
+              palette = "-RdYlGn",
+              border.col = "white",
+              title.col = "Mentions") +
+  tm_layout(frame = FALSE, 
+            title = "Average Number of mentions of each keyword by country") +
+  tm_legend(show = TRUE)
+
+# Print the map
+map
+
+```
+
+```{r}
+
+#save the map
+tmap_save(map, "map_avg_mentions.html")
+
+```
+
+```{r}
+# Create the map with the merged_df2 data frame
+tmap_mode("plot")
+
+map2 <- tm_shape(merged_df2) +
+  tm_polygons("n", 
+              palette = "-RdYlGn",
+              border.col = "white",
+              title.col = "Mentions") +
+  tm_layout(frame = FALSE, 
+            title = "Total Number of mentions of each keyword by country") +
+  tm_legend(show = TRUE)
+
+map2
+
+```
+
+```{r}
+#save the output of map2
+tmap_save(map2, "map_total_mentions.html")
+
+
+```
+
+#Create a checkpoint so I can start here when I am repeating the analysis. We are also going to create multiple lss models, and this section could be done via a for loop or a function, but for the sake of clarity, we will do it manually.
+
+```{r}
+#save the data frame to a csv file
+write.csv(dat_kwic_all, "dat_kwic_all.csv")
+```
+
+```{r}
+
+#load in dat_kwic_all data frame
+dat_kwic_all <- read.csv("dat_kwic_all.csv")
+
+```
+
+```{r}
+
+# remove the pre and the post column of the dat_kwic_all data frame
+dat_kwic_all2 <- dat_kwic_all %>%
+  select(-pre, -post, -from, -to, -pattern)
+
+```
+
+```{r}
+View(dat_kwic_all2)
+```
+
+#Now we will begin our LSS analysis(Latent Semantic Scaling) to see how the keywords are being used in the text. First we need to turn our dataframe dat_kwick_all into a corpus object
+
+```{r}
+#use the dataframe we created dat_kwic_all2 and convert this dataframe to a corpus object with the the sentence as the textfield of our corpus
+
+corp_kwic <- corpus(dat_kwic_all2, 
+                    text_field = "sentence")
+                    
+#summary(corp_kwic)
+
+```
+
+```{r}
+corp_sent <- corpus_reshape(corp_kwic, to = "sentence")
+
+```
+
+```{r}
+#number of docs in the corpus
+ndoc(corp_kwic)
+```
+
+```{r}
+library(quanteda.textmodels)
+library(quanteda.textstats)
+
+#First tokenize the corpus. 
+toks_sent <- corp_sent %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+
+
+```
+
+```{r}
+#then, Identify and compound sequences of capitalized words, such as "United Nations" or "United States", as a single token. This is done by using the tokens_compound function in the quanteda package.
+
+toks_sent_cap <- tokens_select(toks_sent, 
+                               pattern = "^[A-Z]",
+                               valuetype = "regex",
+                               case_insensitive = FALSE, 
+                               padding = TRUE)
+
+tstat_col_cap <- textstat_collocations(toks_sent_cap, min_count = 10, tolower = FALSE)
+
+
+head(tstat_col_cap, 20)
+```
+
+```{r}
+#compound the tokens
+
+toks_compound <- tokens_compound(toks_sent, tstat_col_cap[tstat_col_cap$z > 3,], 
+                             case_insensitive = FALSE)
+
+```
+
+```{r}
+#Create a document feature matrix
+dfmat_sentence <- dfm(toks_compound)
+
+```
+
+```{r}
+#remove the sparse terms from the dfm
+dfmat_sentence_trim <- dfm_trim(dfmat_sentence, min_docfreq = 10, min_termfreq = 3)
+
+```
+
+```{r}
+#compare the dmat_sentence and the dfmat_sentence_trim
+nfeat(dfmat_sentence)
+nfeat(dfmat_sentence_trim)
+
+nfeat(dfmat_sentence) - nfeat(dfmat_sentence_trim)
+```
+
+```{r}
+#look at the top features of the dfmat_sentence_trim
+topfeatures(dfmat_sentence_trim, n = 100)
+```
+
+```{r}
+library(quanteda.corpora)
+library(LSX)
+
+#If I want to re-check the model, I can load in the llss_cache file, which is this first file containing the data of my first model
+#lss_cache <- readRDS("lss_cache/svds_all.RDS")
+
+```
+
+```{r}
+print(data_dictionary_sentiment)
+```
+
+```{r}
+# Set our seedwords
+seed <- as.seedwords(data_dictionary_sentiment)
+
+```
+
+```{r}
+# Perform LSS analysis
+
+lss <- textmodel_lss(dfmat_sentence_trim, seeds = seed, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+textplot_terms(lss, highlight = NULL)
+
+```
+
+```{r}
+textplot_terms(lss, data_dictionary_LSD2015["negative"])
+```
+
+```{r}
+dat <- docvars(lss$data)
+dat$lss <- predict(lss)
+print(nrow(dat))
+```
+
+```{r}
+#turn the year column in dat to a date column
+dat$year <- as.Date(paste0(dat$year, "-01-01"))
+
+```
+
+```{r}
+#smooth the LSS analysis
+smo <- smooth_lss(dat, engine = "locfit", date_var = "year", lss_var = "lss")
+
+```
+
+```{r}
+#plot the smoothed LSS analysis
+ggplot(smo, aes(x = date, y = fit)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment concerning Israel and Palestine over time",
+         x = "Year",
+         y = "Sentiment")
+```
+
+```{r}
+#save the plot
+ggsave("lss_sentiment_over_time.png", width = 10, height = 10)
+```
+
+#lss 2. Now that we have seen the overall lss, we are going to quickly check how Israel(as it is the country that mentions the keywords Israel and Jeuraselm the most) is affecting the output. lss 2
+
+```{r}
+#Now let's look at the corpus again, creating another lss model, but this time let's remove any text that comes from Israel
+dat_kwic_all_no_Is <- dat_kwic_all2 %>%
+  filter(country != "ISR")
+
+```
+
+```{r}
+#convert the data frame to a corpus object
+corp_kwic_no_Is <- corpus(dat_kwic_all_no_Is, 
+                    text_field = "sentence")
+```
+
+```{r}
+#reshape the corpus to a sentence corpus
+corp_sent_no_Is <- corpus_reshape(corp_kwic_no_Is, to = "sentence")
+```
+
+```{r}
+#tokenize the corpus
+toks_sent_no_Is <- corp_sent_no_Is %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+```
+
+```{r}
+#identify and compound sequences of capitalized words
+toks_sent_cap_no_Is <- tokens_select(toks_sent_no_Is, 
+                               pattern = "^[A-Z]",
+                               valuetype = "regex",
+                               case_insensitive = FALSE, 
+                               padding = TRUE)
+
+
+```
+
+```{r}
+tstat_col_cap_no_Is <- textstat_collocations(toks_sent_cap_no_Is, min_count = 10, tolower = FALSE)
+
+```
+
+```{r}
+#compound the tokens
+toks_compound_no_Is <- tokens_compound(toks_sent_no_Is, tstat_col_cap_no_Is[tstat_col_cap_no_Is$z > 3,],
+                             case_insensitive = FALSE)
+
+```
+
+```{r}
+#Create a document feature matrix with tokens that have a minimum frequency of 10
+dfmat_sentence_no_Is <- dfm(toks_compound_no_Is)
+
+```
+
+```{r}
+#remove the sparse terms from the dfm
+dfmat_sentence_trim_no_Is <- dfm_trim(dfmat_sentence_no_Is, min_docfreq = 10, min_termfreq = 3)
+
+```
+
+```{r}
+#compare the dmat_sentence and the dfmat_sentence_trim
+nfeat(dfmat_sentence_no_Is)
+nfeat(dfmat_sentence_trim_no_Is)
+
+nfeat(dfmat_sentence_no_Is) - nfeat(dfmat_sentence_trim_no_Is)
+```
+
+```{r}
+#look at the top features of the dfmat_sentence_trim
+topfeatures(dfmat_sentence_trim_no_Is, n = 100)
+```
+
+```{r}
+# Perform LSS analysis
+lss2 <- textmodel_lss(dfmat_sentence_trim_no_Is, seeds = seed, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+textplot_terms(lss2, highlight = NULL)
+
+```
+
+```{r}
+textplot_terms(lss2, data_dictionary_LSD2015["negative"])
+```
+
+```{r}
+dat2 <- docvars(lss2$data)
+dat2$lss <- predict(lss2)
+print(nrow(dat2))
+```
+
+```{r}
+#turn the year column in dat to a date column
+dat2$year <- as.Date(paste0(dat2$year, "-01-01"))
+
+```
+
+```{r}
+#smooth the LSS analysis
+smo2 <- smooth_lss(dat2, engine = "locfit", date_var = "year", lss_var = "lss")
+
+```
+
+```{r}
+#plot the smoothed LSS analysis
+ggplot(smo2, aes(x = date, y = fit)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment concerning Israel and Palestine, without data from Israel")
+
+```
+
+```{r}
+#save the plot
+ggsave("lss_sentiment_over_time_no_Is.png", width = 10, height = 10)
+```
+
+#lls 3. Now let's do a similar approach when we only look at the text in the corpus that is only mentioning Israel or Jerualsem, so that we can see the sentiment of the text that is only mentioning these keywords. This helps us answer part of our hypothesis that the sentiment of the text is more negative and positive towards the Israel than Palestine.
+
+```{r}
+#now let's do a similar approach when we only look at the text in the corpus that has Israel or Jerusalem as a Keyword
+```
+
+```{r}
+corpus_only_Is_Jer <- corpus_subset(corp_kwic, keyword %in% c("israel", "jerusalem"))
+
+```
+
+```{r}
+#resahpe the corpus to a sentence corpus
+corp_sent_only_Is_Jer <- corpus_reshape(corpus_only_Is_Jer, to = "sentence")
+
+```
+
+```{r}
+#tokenize the corpus
+toks_sent_only_Is_Jer <- corp_sent_only_Is_Jer %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+```
+
+```{r}
+#identify and compound sequences of capitalized words
+toks_sent_cap_only_Is_Jer <- tokens_select(toks_sent_only_Is_Jer, 
+                               pattern = "^[A-Z]",
+                               valuetype = "regex",
+                               case_insensitive = FALSE, 
+                               padding = TRUE)
+
+tstat_col_cap_only_Is_Jer <- textstat_collocations(toks_sent_cap_only_Is_Jer, min_count = 10, tolower = FALSE)
+
+```
+
+```{r}
+#compound the tokens
+toks_compound_only_Is_Jer <- tokens_compound(toks_sent_only_Is_Jer, tstat_col_cap_only_Is_Jer[tstat_col_cap_only_Is_Jer$z > 3,],
+                             case_insensitive = FALSE)
+
+```
+
+```{r}
+#Create a document feature matrix with tokens that have a minimum frequency of 10
+dfmat_sentence_only_Is_Jer <- dfm(toks_compound_only_Is_Jer)
+
+```
+
+```{r}
+#remove the sparse terms from the dfm
+dfmat_sentence_trim_only_Is_Jer <- dfm_trim(dfmat_sentence_only_Is_Jer, min_docfreq = 10, min_termfreq = 3)
+
+```
+
+```{r}
+#compare the dmat_sentence and the dfmat_sentence_trim
+nfeat(dfmat_sentence_only_Is_Jer)
+nfeat(dfmat_sentence_trim_only_Is_Jer)
+
+nfeat(dfmat_sentence_only_Is_Jer) - nfeat(dfmat_sentence_trim_only_Is_Jer)
+```
+
+```{r}
+#look at the top features of the dfmat_sentence_trim
+topfeatures(dfmat_sentence_trim_only_Is_Jer, n = 100)
+```
+
+```{r}
+# Perform LSS analysis
+lss3 <- textmodel_lss(dfmat_sentence_trim_only_Is_Jer, seeds = seed, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+
+textplot_terms(lss3, highlight = data_dictionary_sentiment)
+
+```
+
+```{r}
+textplot_terms(lss3, data_dictionary_LSD2015["negative"])
+```
+
+```{r}
+dat3 <- docvars(lss3$data)
+dat3$lss <- predict(lss3)
+print(nrow(dat3))
+```
+
+```{r}
+#turn the year column in dat to a date column
+dat3$year <- as.Date(paste0(dat3$year, "-01-01"))
+
+```
+
+```{r}
+#smooth the LSS analysis
+smo3 <- smooth_lss(dat3, engine = "locfit", date_var = "year", lss_var = "lss")
+
+```
+
+```{r}
+#plot the smoothed LSS analysis
+ggplot(smo3, aes(x = date, y = fit)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment using only keywords Israel and Jerusalem")+
+  geom_hline(yintercept=0,linetype=2)
+
+```
+
+```{r}
+#save the plot
+ggsave("lss_sentiment_over_time_only_Is_Jer.png", width = 10, height = 10)
+```
+
+#lss 4. Now let's do a similar approach when we only look at the text in the corpus that have the keywords Palestine, Gaza, and West Bank. This will help us see the sentiment of the text that is only mentioning these keywords and will help us answer our hypothesis. 
+```{r}
+#now let's do a similar approach when we only look at the text in the corpus that have the keywords Gaza, West Bank, and Palestine. First create a data frame that has only the text that has these keywords
+
+df1 <- dat_kwic_all2 %>%
+  filter(keyword == c("gaza", "west bank", "palestine"))
+
+corp_P <- corpus(df1, 
+                    text_field = "sentence")
+```
+
+```{r}
+#reshape the corpus to a sentence corpus
+corp_sent_only_P <- corpus_reshape(corp_P, to = "sentence")
+
+```
+
+```{r}
+#tokenize the corpus
+toks_sent_only_P <- corp_sent_only_P %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+```
+
+```{r}
+#identify and compound sequences of capitalized words
+toks_sent_cap_only_P <- tokens_select(toks_sent_only_P, 
+                               pattern = "^[A-Z]",
+                               valuetype = "regex",
+                               case_insensitive = FALSE, 
+                               padding = TRUE)
+
+tstat_col_cap_only_P <- textstat_collocations(toks_sent_cap_only_P, min_count = 10, tolower = FALSE)
+```
+
+```{r}
+#compound the tokens
+toks_compound_only_P <- tokens_compound(toks_sent_only_P, tstat_col_cap_only_P[tstat_col_cap_only_P$z > 3,], case_insensitive = FALSE)
+
+```
+
+```{r}
+#Create a document feature matrix with tokens that have a minimum frequency of 10
+dfmat_sentence_only_P <- dfm(toks_compound_only_P)
+
+```
+
+```{r}
+#remove the sparse terms from the dfm
+dfmat_sentence_trim_only_P <- dfm_trim(dfmat_sentence_only_P, min_docfreq = 10, min_termfreq = 3)
+
+```
+
+```{r}
+#compare the dmat_sentence and the dfmat_sentence_trim
+nfeat(dfmat_sentence_only_P)
+nfeat(dfmat_sentence_trim_only_P)
+
+nfeat(dfmat_sentence_only_P) - nfeat(dfmat_sentence_trim_only_P)
+```
+
+```{r}
+#look at the top features of the dfmat_sentence_trim
+topfeatures(dfmat_sentence_trim_only_P, n = 100)
+```
+
+```{r}
+# Perform LSS analysis
+lss4 <- textmodel_lss(dfmat_sentence_trim_only_P, seeds = seed, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+textplot_terms(lss4, highlight = data_dictionary_sentiment)
+
+```
+
+```{r}
+textplot_terms(lss4, data_dictionary_LSD2015["negative"])
+```
+
+```{r}
+dat4 <- docvars(lss4$data)
+dat4$lss <- predict(lss4)
+print(nrow(dat4))
+```
+
+```{r}
+#turn the year column in dat to a date column
+dat4$year <- as.Date(paste0(dat4$year, "-01-01"))
+
+```
+
+```{r}
+#smooth the LSS analysis
+smo4 <- smooth_lss(dat4, engine = "locfit", date_var = "year", lss_var = "lss")
+
+```
+
+```{r}
+#add the group column to the data frame to identify either the group Palestine or Israel
+smo4$group <- "Israel"
+smo3$group <- "Palestine"
+```
+
+```{r}
+#plot the smoothed LSS analysis, add the line from smo3 and smo4 to the plot, adding in a legend to identify both lines
+ggplot(smo4, aes(x = date, y = fit)) + 
+  geom_line(color = 'blue') +
+  geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'blue', alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment of both Israel and Palestine") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(data = smo3, aes(x = date, y = fit), color = 'red') +
+  geom_ribbon(data = smo3, aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'red', alpha = 0.1) +
+  theme(legend.position = "topright") +
+  scale_color_manual(values = c("blue", "red"), labels = c("Israel", "Palestine"))
+```
+
+```{r}
+#save the plot
+ggsave("lss_sentiment_over_time_Is_P.png", width = 10, height = 10)
+```
+
+#lss 6. We have a model of sentiment in regards to the text that mentions Israel and Jerusalem in our lls 3 model. However, as we have also seen how the impact in removing Israel's mentions of itself on the overall sentiment when we had compared the first lls and the lls 2 model, we are going to see the sentiment of the text that mentions Israel and Jerusalem, but this time we are going to remove mentions from the nation of Israel. 
+
+```{r}
+#now lets create an lss of sentiment towards the keywords Israel and Jerusalem, but let's remove Israel from the data
+#Now let's look at the corpus again, creating another lss model, but this time let's remove any text that comes from Israel
+corp_sent_no_Is_Is <- corpus_subset(corp_sent_no_Is, keyword %in% c("israel", "jerusalem"))
+
+```
+
+```{r}
+#tokenize the corpus
+toks_sent_no_Is_Is <- corp_sent_no_Is_Is %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+```
+
+```{r}
+#identify and compound sequences of capitalized words
+toks_sent_cap_no_Is_Is <- tokens_select(toks_sent_no_Is_Is, 
+                               pattern = "^[A-Z]",
+                               valuetype = "regex",
+                               case_insensitive = FALSE, 
+                               padding = TRUE)
+tstat_col_cap_no_Is_Is <- textstat_collocations(toks_sent_cap_no_Is_Is, min_count = 10, tolower = FALSE)
+
+```
+
+```{r}
+#compound the tokens
+toks_compound_no_Is_Is <- tokens_compound(toks_sent_no_Is_Is, tstat_col_cap_no_Is_Is[tstat_col_cap_no_Is_Is$z > 3,],
+                             case_insensitive = FALSE)
+
+```
+
+```{r}
+#Create a document feature matrix with tokens that have a minimum frequency of 10
+dfmat_sentence_no_Is_Is <- dfm(toks_compound_no_Is_Is)
+
+```
+
+```{r}
+#remove the sparse terms from the dfm
+dfmat_sentence_trim_no_Is_Is <- dfm_trim(dfmat_sentence_no_Is_Is, min_docfreq = 10, min_termfreq = 3)
+
+```
+
+```{r}
+#compare the dmat_sentence and the dfmat_sentence_trim
+nfeat(dfmat_sentence_no_Is_Is)
+nfeat(dfmat_sentence_trim_no_Is_Is)
+
+nfeat(dfmat_sentence_no_Is_Is) - nfeat(dfmat_sentence_trim_no_Is_Is)
+```
+
+```{r}
+#look at the top features of the dfmat_sentence_trim
+topfeatures(dfmat_sentence_trim_no_Is_Is, n = 100)
+```
+
+```{r}
+# Perform LSS analysis
+lss6 <- textmodel_lss(dfmat_sentence_trim_no_Is_Is, seeds = seed, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+textplot_terms(lss6, highlight = data_dictionary_sentiment)
+
+```
+
+```{r}
+textplot_terms(lss6, data_dictionary_LSD2015["negative"])
+```
+
+```{r}
+dat6 <- docvars(lss6$data)
+dat6$lss <- predict(lss6)
+print(nrow(dat6))
+```
+
+```{r}
+#turn the year into a date and add a column to the data frame to identify the group
+dat6$year <- as.Date(paste0(dat6$year, "-01-01"))
+dat6$group <- "Israel"
+```
+
+```{r}
+#smooth the LSS analysis
+smo6 <- smooth_lss(dat6, engine = "locfit", date_var = "year", lss_var = "lss")
+```
+
+```{r}
+#plot the smoothed LSS analysis
+ggplot(smo6, aes(x = date, y = fit)) + 
+    geom_line() +
+    geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment concerning Israel")
+```
+
+```{r}
+ggplot(smo4, aes(x = date, y = fit)) + 
+  geom_line(color = 'blue') +
+  geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'blue', alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Sentiment of both Israel and Palestine") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(data = smo6, aes(x = date, y = fit), color = 'red') +
+  geom_ribbon(data = smo6, aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'red', alpha = 0.1) +
+  theme(legend.position = "topright") +
+  scale_color_manual(values = c("blue", "red"), labels = c("Israel", "Palestine"))
+```
+
+```{r}
+#save the plot
+ggsave("lss_sentiment_over_time_Is_no_Is.png", width = 10, height = 10)
+```
+
+```{r}
+```
+
+```{r}
+#find the area under the curve(or the integral) of the data from sm04 and sm06 with the x cordinates being the date and the y cordinates being the fit
+library(pracma)
+#first convert the date to a numeric value
+smo3$year_num <- as.numeric(smo3$date)
+smo4$year_num <- as.numeric(smo4$date)
+smo6$year_num <- as.numeric(smo6$date)
+
+#find the area under the curve by apply the trapezoid rule
+area_smo3 <- trapz(smo3$year_num, smo3$fit)
+area_smo4 <- trapz(smo4$year_num, smo4$fit)
+area_smo6 <- trapz(smo6$year_num, smo6$fit)
+
+print(area_smo3)
+print(area_smo4)
+print(area_smo6)
+```
+
+```{r}
+#subtract the area under the curve of smo4 from the area under the curve of smo6, to get what the difference is between smo6(sentiment towards Israel without Israel's speeches) and smo4(sentiment towards Palestine)
+area_smo6 - area_smo4
+area_smo3 - area_smo4
+```
+
+#Lss 7. Validation Now let's do a similar approach comparing sentiment towards Israel and Palestine, but we change what the seedwords are in the LSS analysis, as to attempt to help validate the results of the LSS analysis.
+
+```{r}
+library(yaml)
+
+#load in the dictionary.yml file
+dict <- read_yaml("dictionary.yml")
+```
+
+```{r}
+# Set our seedwords
+seed2 <- as.seedwords(dict$hostility)
+```
+
+```{r}
+print(seed2)
+```
+
+```{r}
+```
+
+```{r}
+# Perform LSS analysis
+lss5 <- textmodel_lss(dfmat_sentence_trim_no_Is_Is, seeds = seed2, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+
+lss7 <- textmodel_lss(dfmat_sentence_trim_only_P, seeds = seed2, k = 300, cache = TRUE, 
+                     include_data = TRUE, group_data = TRUE)
+```
+
+```{r}
+```
+
+```{r}
+#view the textplot_terms of the LSS analysis
+textplot_terms(lss5, highlight = NULL)
+```
+
+```{r}
+textplot_terms(lss5, dict$hostility)
+```
+
+```{r}
+dat5 <- docvars(lss5$data)
+dat5$lss <- predict(lss5)
+print(nrow(dat5))
+dat7 <- docvars(lss7$data)
+dat7$lss <- predict(lss7)
+print(nrow(dat7))
+```
+
+```{r}
+#turn the year column in dat to a date column
+dat5$year <- as.Date(paste0(dat5$year, "-01-01"))
+dat7$year <- as.Date(paste0(dat7$year, "-01-01"))
+```
+
+```{r}
+#smooth the LSS analysis
+smo5 <- smooth_lss(dat5, engine = "locfit", date_var = "year", lss_var = "lss")
+smo7 <- smooth_lss(dat7, engine = "locfit", date_var = "year", lss_var = "lss")
+```
+
+```{r}
+#plot the smoothed LSS analysis, with a dashed line through 0 on the y-axis
+ggplot(smo7, aes(x = date, y = fit)) + 
+  geom_line(color = 'blue') +
+  geom_ribbon(aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'blue', alpha = 0.1) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +  
+  labs(title = "Hostility in mentions of Israel(red) and Palestine(blue)") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_line(data = smo5, aes(x = date, y = fit), color = 'red') +
+  geom_ribbon(data = smo5, aes(ymin = fit - se.fit * 1.96, ymax = fit + se.fit * 1.96), fill = 'red', alpha = 0.1) +
+  theme(legend.position = "topright") +
+  scale_color_manual(values = c("blue", "red"), labels = c("Israel", "Palestine"))
+
+
+```
+
+```{r}
+#save the plot
+ggsave("lss_hostility_over_time_Is_P.png", width = 10, height = 10)
+```
+
+```{r}
+#find the area under the curve(or the integral) of the data from sm05 and sm07 with the x cordinates being the date and the y cordinates being the fit
+
+#first convert the date to a numeric value
+smo5$year_num <- as.numeric(smo5$date)
+smo7$year_num <- as.numeric(smo7$date)
+#apply the trapzoid rule function to find the area under the curve
+area_smo5 <- trapz(smo5$year_num, smo5$fit)
+area_smo7 <- trapz(smo7$year_num, smo7$fit)
+
+print(area_smo5)
+print(area_smo7)
+```
+
+```{r}
+#subtract the area under the curve of smo5 from the area under the curve of smo7, to get what the difference is between smo7(hostility in mentions of Palestine) and smo5(hostility in mentions of Israel)
+area_smo7 - area_smo5
+```
+
+```{r}
+
+```
+
+#Validation 2. Dictionary approach. We can also apply a dictionary based sentiment analysis to the text in the corpus to see if the sentiment analysis matches the LSS analysis
+
+```{r}
+#tokenize our corpus that only contains Is and Jer keywords
+toks_sent_val_Is <- corpus_only_Is_Jer %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+
+```
+
+```{r}
+#apply the dictionary based sentiment analysis to the tokens
+data_dictionary_LSD2015_pos_neg <- data_dictionary_LSD2015[1:2]
+sentiment_val_Is <- tokens_lookup(toks_sent_val_Is, dictionary =data_dictionary_LSD2015_pos_neg)
+
+```
+
+```{r}
+#Create a dfm from the sentiment analysis and group by the year
+dfmat_sentiment_val_Is <- dfm(sentiment_val_Is) %>% 
+  dfm_group(groups = year)
+df_sentiment_val_Is <- convert(dfmat_sentiment_val_Is, to = "data.frame")
+```
+
+```{r}
+matplot(dfmat_sentiment_val_Is$year, dfmat_sentiment_val_Is, type = "l", lty = 1, col = 1:2,
+        ylab = "Frequency", xlab = "")
+grid()
+legend("topleft", col = 1:2, legend = colnames(dfmat_sentiment_val_Is), lty = 1, bg = "white")
+```
+
+```{r}
+#from the data frame, df_sentiment_val, we can turn the doc_id into a date column
+df_sentiment_val_Is$doc_id <- as.Date(paste0(df_sentiment_val_Is$doc_id, "-01-01"))
+```
+
+```{r}
+#create the a similar plot as above, df_sentiment_val is a data frame that has the data from the dfm object. Use the doc_id to represent the year, and make sure to only show the decade. Also, make sure to only show the positive and negative sentiment, both as two seperate lines.
+
+ggplot(df_sentiment_val_Is, aes(x = doc_id, y = positive, group = 1)) +
+  geom_line(aes(y = positive, color = "positive")) +
+  geom_line(aes(y = negative, color = "negative")) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +
+  labs(title = "Dictionary based sentiment analysis concerning Israel",
+       x = "Year",
+       y = "Frequency") 
+
+```
+
+```{r}
+#save the plot
+ggsave("dictionary_sentiment_analysis_over_time_Is.png", width = 10, height = 10)
+```
+
+```{r}
+```
+
+```{r}
+dat_smooth <- ksmooth(x = dfmat_sentiment_val_Is$year, 
+                      y = dfmat_sentiment_val_Is[,"positive"] - dfmat_sentiment_val_Is[,"negative"],
+                      kernel = "normal", bandwidth = 30)
+plot(dat_smooth$x, dat_smooth$y, type = "l", ylab = "Sentiment", xlab = "Year")
+grid()
+abline(h = 0, lty = 2)
+title("Overall Sentiment concering Israel")
+```
+
+```{r}
+#save the plot
+ggsave("dictionary_sentiment_analysis_over_time_smoothed_Is.png", width = 10, height = 10)
+```
+
+```{r}
+#tokenize the corps_P corpus
+toks_sent_no_Is_val <- corp_P %>%
+  tokens(remove_punct = TRUE, remove_symbols = TRUE, remove_numbers = TRUE) %>%
+  tokens_remove(pattern = stopwords("en")) 
+
+```
+
+```{r}
+#use tokens_lookup to apply the dictionary based sentiment analysis to the tokens
+sentiment_no_Is_val <- tokens_lookup(toks_sent_no_Is_val, dictionary = data_dictionary_LSD2015_pos_neg)
+
+```
+
+```{r}
+#Create a dfm from the sentiment analysis and group by the year
+dfmat_sentiment_no_Is_val <- dfm(sentiment_no_Is_val) %>% 
+  dfm_group(groups = year)
+#turn the dfm into a data frame
+df_sentiment_no_Is_val <- convert(dfmat_sentiment_no_Is_val, to = "data.frame")
+```
+
+```{r}
+#plot the data
+matplot(dfmat_sentiment_no_Is_val$year, dfmat_sentiment_no_Is_val, type = "l", lty = 1, col = 1:2,
+        ylab = "Frequency", xlab = "")
+
+```
+
+```{r}
+#turn the doc_id from the df into a date column
+df_sentiment_no_Is_val$doc_id <- as.Date(paste0(df_sentiment_no_Is_val$doc_id, "-01-01"))
+```
+
+```{r}
+#create a plot of the data using ggplot
+ggplot(df_sentiment_no_Is_val, aes(x = doc_id, y = positive, group = 1)) +
+  geom_line(aes(y = positive, color = "positive")) +
+  geom_line(aes(y = negative, color = "negative")) +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +
+  labs(title = "Dictionary based sentiment analysis concerning Palestine",
+       x = "Year",
+       y = "Frequency") 
+
+```
+
+```{r}
+#save the plot
+ggsave("dictionary_sentiment_analysis_over_time_no_Is.png", width = 10, height = 10)
+```
+
+```{r}
+```
+
+```{r}
+dat_smooth_no_Is <- ksmooth(x = dfmat_sentiment_no_Is_val$year, 
+                      y = dfmat_sentiment_no_Is_val[,"positive"] - dfmat_sentiment_no_Is_val[,"negative"],
+                      kernel = "normal", bandwidth = 30)
+plot(dat_smooth$x, dat_smooth$y, type = "l", ylab = "Sentiment", xlab = "")
+grid()
+abline(h = 0, lty = 2)
+title("Overall Sentiment concering Paelstine")
+```
+
+```{r}
+#save the plot
+ggsave("dictionary_sentiment_analysis_over_time_smoothed_no_Is.png", width = 10, height = 10)
+```
+
+```{r}
+citation("LSX")
+```
+#Validation 3. Bert-Based NLI: Load the csv data gained from python(run in kaggle) from Moritz Laurer's code examples in github that are based on the paper less-annotating-more-classifing.
+
+```{r}
+#load the csv data
+dat_kaggle <- read.csv("combined_df.csv")
+```
+
+```{r}
+#look at the data to make sure everything looks accurate
+head(dat_kaggle)
+```
+
+```{r}
+#turn the year column into a date column and remove the columns Unnamed..0 and pattern_x
+dat_kaggle$year <- as.Date(paste0(dat_kaggle$year, "-01-01"))
+dat_kaggle <- dat_kaggle[, -c(1, 2)]
+```
+
+```{r}
+#Remove any of the data that the model is above 90% when it comes to its confidence in the predictive probability in the label_text_pred_proba column
+dat_kaggle_clean <- dat_kaggle %>%
+  filter(label_text_pred_proba > 0.9)
+
+#noticably, this has removed a lot of the data
+ nrow(dat_kaggle_clean)/ nrow(dat_kaggle)
+```
+
+```{r}
+nrow(dat_kaggle_clean)
+```
+
+```{r}
+```
+
+```{r}
+#we can plot the data to see the distribution positive and negative sentiment towards Israel and Palestine via our label_text_pred column and the year column
+ggplot(dat_kaggle_clean, aes(x = year, fill = label_text_pred)) +
+  geom_bar() +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +
+  labs(title = "Sentiment towards Israel and Palestine",
+       x = "Year",
+       y = "Count of Speeches") 
+```
+
+```{r}
+#create a similar plot, but with a line representing the data, with y being the count of the categories in the label_text_pred column and x being the year column
+dat_kaggle_clean_grouped <- dat_kaggle_clean %>%
+  group_by(year, label_text_pred) %>%
+  summarise(n = n())
+
+ggplot(dat_kaggle_clean_grouped, aes(x = year, y = n, group = label_text_pred, color = label_text_pred)) +
+  geom_line() +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +
+  labs(title = "Sentiment of Israel and Palestine",
+       x = "Year",
+       y = "Count")
+```
+```{r}
+#save the plot
+ggsave("bert_sentiment_over_time_Is_P.png", width = 10, height = 10)
+```
+
+```{r}
+```
+
+
+```{r}
+#make plots for each of the labels in the label_text_pred column using facet wrap
+ggplot(dat_kaggle_clean_grouped, aes(x = year, y = n, group = label_text_pred, color = label_text_pred)) +
+  geom_line() +
+  scale_x_date(date_breaks = "10 years", date_labels = "%y") +
+  labs(title = "Sentiment of Isreal and Palestine",
+       x = "Year",
+       y = "Count") +
+  facet_wrap(~label_text_pred)
+```
+
+```{r}
+#save the plot
+ggsave("bert_sentiment_over_time_Is_P_facet.png", width = 10, height = 10)
+```
+
+```{r}
+citation("LSX")
+```
+
+```{r}
+?lexicoder
+```
